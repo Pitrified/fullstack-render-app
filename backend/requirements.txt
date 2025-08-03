@@ -5,3 +5,4 @@ asyncpg
 google-auth
 python-dotenv
 requests
+psycopg2-binary
