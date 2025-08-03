@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: fastapi-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: userdb
+          property: connectionString
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+    autoDeploy: true
+    repo: https://github.com/yourname/yourrepo
+
+  - type: static
+    name: react-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    repo: https://github.com/yourname/yourrepo
+    branch: main
+    autoDeploy: true
+
+databases:
+  - name: userdb
+    plan: free
