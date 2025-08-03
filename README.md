@@ -56,12 +56,11 @@ npm run dev
 ## 🚀 Deploy to Render
 
 1. Push the repo to GitHub
-2. Add `render.yaml` at the root
+2. Create a new Blueprint on Render: https://dashboard.render.com/blueprint/new, it will detect the `render.yaml` at the root
 3. Render will auto-deploy:
    - Static React site
    - FastAPI backend
    - PostgreSQL DB
-
 4. Manually set the following **environment variables** in Render:
    - backend service: `GOOGLE_CLIENT_ID`
    - frontend service: `VITE_GOOGLE_CLIENT_ID`

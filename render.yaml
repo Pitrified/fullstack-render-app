@@ -5,6 +5,10 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    repo: https://github.com/Pitrified/fullstack-render-app
+    branch: main
+    autoDeploy: true
+    rootDir: backend
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -14,17 +18,19 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
-    autoDeploy: true
-    repo: https://github.com/yourname/yourrepo
 
-  - type: static
+  - type: web
     name: react-frontend
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: build
-    repo: https://github.com/yourname/yourrepo
+    repo: https://github.com/Pitrified/fullstack-render-app
     branch: main
     autoDeploy: true
+    rootDir: frontend
+    envVars:
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
 
 databases:
   - name: userdb
