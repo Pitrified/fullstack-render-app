@@ -32,7 +32,7 @@ services:
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false
       - key: VITE_API_BASE_URL
-        value: http://fastapi-backend:8000
+        value: https://fastapi-backend-yf8l.onrender.com
 
 databases:
   - name: userdb
