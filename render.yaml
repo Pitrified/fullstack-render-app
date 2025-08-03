@@ -23,7 +23,7 @@ services:
     name: react-frontend
     env: static
     buildCommand: npm install && npm run build
-    staticPublishPath: build
+    staticPublishPath: dist
     repo: https://github.com/Pitrified/fullstack-render-app
     branch: main
     autoDeploy: true

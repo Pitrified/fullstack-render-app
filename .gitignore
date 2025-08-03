@@ -5,4 +5,5 @@ backend/__pycache__/
 backend/venv/
 build/
 frontend/.env
+frontend/dist/
 node_modules/
