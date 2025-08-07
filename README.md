@@ -24,6 +24,19 @@ You can use Docker:
 docker run --name pg-local -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=mydb -d postgres
 ```
 
+And restart it later with:
+
+```bash
+docker start pg-local
+```
+
+Or if you need to stop and remove it:
+
+```bash
+docker stop pg-local
+docker rm pg-local
+```
+
 Or install PostgreSQL and create the DB manually.
 
 ### 3. Backend Setup
