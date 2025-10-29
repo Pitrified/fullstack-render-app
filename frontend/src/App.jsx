@@ -1,43 +1,36 @@
 import { useEffect, useState } from "react";
 import { useGoogleIdentity } from "./hooks/useGoogleIdentity";
+import { useAuth } from "./hooks/useAuth";
 import { sanitizeUserData } from "./utils/sanitize";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function App() {
   const googleReady = useGoogleIdentity();
-  const [user, setUser] = useState(null);
+  const { user, loading, error, login, logout, isAuthenticated } = useAuth();
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (!googleReady) return;
+    if (!googleReady || loading || isAuthenticated) return;
 
     const handleCredentialResponse = async (response) => {
       try {
         const token = response.credential;
-
-        const res = await fetch(`${API_BASE_URL}/login`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          
+        
+        // Use the new session-based login
+        const result = await login(token);
+        
+        if (result.success) {
           // Security: Use DOMPurify-based sanitization for comprehensive XSS protection
-          const sanitizedUser = sanitizeUserData(data);
+          const sanitizedUser = sanitizeUserData(result.user);
           
           if (sanitizedUser && sanitizedUser.name && sanitizedUser.email) {
-            setUser(sanitizedUser);
             setMessage(`Welcome back, ${sanitizedUser.name}!`);
           } else {
             setMessage('Invalid user data received. Please try again.');
           }
         } else {
-          setMessage('Login failed. Please try again.');
+          setMessage(result.error || 'Login failed. Please try again.');
         }
       } catch (error) {
         console.error('Login error:', error);
@@ -45,59 +38,84 @@ function App() {
       }
     };
 
-    window.google.accounts.id.initialize({
-      client_id: CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
+    // Wait for the DOM element to be available
+    const initializeGoogleSignIn = () => {
+      const buttonContainer = document.getElementById("google-signin");
+      if (!buttonContainer) {
+        // If element doesn't exist yet, try again in next tick
+        setTimeout(initializeGoogleSignIn, 100);
+        return;
+      }
 
-    window.google.accounts.id.renderButton(
-      document.getElementById("google-signin"),
-      { theme: "outline", size: "large" }
+      window.google.accounts.id.initialize({
+        client_id: CLIENT_ID,
+        callback: handleCredentialResponse,
+      });
+
+      window.google.accounts.id.renderButton(
+        buttonContainer,
+        { theme: "outline", size: "large" }
+      );
+    };
+
+    initializeGoogleSignIn();
+
+  }, [googleReady, loading, isAuthenticated]);
+
+  // Handle logout with session invalidation
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result.success) {
+      setMessage('');
+    }
+  };
+
+  // Show loading state during authentication check
+  if (loading && !user) {
+    return (
+      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+        <h1>Login with Google</h1>
+        <p>Loading...</p>
+      </div>
     );
-
-    // Optional: Uncomment to show the One Tap prompt automatically
-    // window.google.accounts.id.prompt();
-
-  }, [googleReady]);
+  }
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <h1>Login with Google</h1>
       
       {/* Security: Safe message display */}
-      {message && (
+      {(message || error) && (
         <div style={{ 
           padding: '10px', 
           marginBottom: '20px',
-          backgroundColor: user ? '#d4edda' : '#f8d7da',
-          border: `1px solid ${user ? '#c3e6cb' : '#f5c6cb'}`,
+          backgroundColor: (user && !error) ? '#d4edda' : '#f8d7da',
+          border: `1px solid ${(user && !error) ? '#c3e6cb' : '#f5c6cb'}`,
           borderRadius: '4px',
-          color: user ? '#155724' : '#721c24'
+          color: (user && !error) ? '#155724' : '#721c24'
         }}>
-          {message}
+          {error || message}
         </div>
       )}
       
-      {user ? (
+      {isAuthenticated && user ? (
         <div style={{ marginTop: '20px' }}>
           <h2>Welcome!</h2>
           <p><strong>Name:</strong> {user.name}</p>
           <p><strong>Email:</strong> {user.email}</p>
           <button 
-            onClick={() => {
-              setUser(null);
-              setMessage('');
-            }}
+            onClick={handleLogout}
+            disabled={loading}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#dc3545',
+              backgroundColor: loading ? '#6c757d' : '#dc3545',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
-              cursor: 'pointer'
+              cursor: loading ? 'not-allowed' : 'pointer'
             }}
           >
-            Logout
+            {loading ? 'Logging out...' : 'Logout'}
           </button>
         </div>
       ) : (
