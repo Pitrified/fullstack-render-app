@@ -5,3 +5,5 @@ asyncpg
 google-auth
 python-dotenv
 requests
+pytest
+pytest-asyncio
