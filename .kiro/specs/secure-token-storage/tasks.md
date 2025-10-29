@@ -30,31 +30,33 @@
 
 - [ ] 2. Update authentication system for cookie-based sessions
 
-  - Modify existing authentication middleware to support cookie-based sessions
   - Create new session-based authentication endpoints
-  - Update user authentication flow to use sessions instead of Bearer tokens
+  - Update authentication middleware to support cookie-based sessions
+  - Replace Bearer token authentication with session validation
   - _Requirements: 1.4, 2.3, 2.4, 4.4_
 
 - [ ] 2.1 Create session authentication endpoints
 
-  - Add POST /auth/login endpoint that creates sessions from Google tokens
+  - Add POST /auth/login endpoint that creates sessions from Google tokens and sets httpOnly cookies
   - Add POST /auth/logout endpoint that invalidates sessions and clears cookies
   - Add GET /auth/me endpoint that returns current user from session
+  - Add POST /auth/refresh endpoint for session refresh
   - _Requirements: 1.1, 3.2, 3.5_
 
 - [ ] 2.2 Update authentication middleware
 
-  - Modify get_current_user function to validate sessions from cookies
+  - Create get_current_user_from_session function to validate sessions from cookies
   - Add session-based user retrieval and validation
   - Implement proper error handling for invalid or expired sessions
+  - Keep existing get_current_user for backward compatibility during transition
   - _Requirements: 2.3, 2.4, 4.2, 4.3_
 
-- [ ] 2.3 Add session refresh functionality
+- [ ] 2.3 Initialize session manager in main.py
 
-  - Implement automatic token refresh when sessions are near expiration
-  - Add session refresh endpoint for client-side refresh requests
-  - Handle Google token refresh and session updates
-  - _Requirements: 2.1, 2.2, 3.1_
+  - Import and initialize the global session_manager
+  - Start the session cleanup background task on application startup
+  - Update CORS middleware to allow credentials for cookie-based authentication
+  - _Requirements: 3.4, 4.5_
 
 - [ ] 2.4 Write integration tests for authentication endpoints
 
@@ -67,31 +69,33 @@
 
   - Create new authentication hook that manages sessions without direct token access
   - Update App.jsx to use cookie-based authentication flow
-  - Remove localStorage token storage and Bearer token usage
+  - Remove direct token handling and implement cookie-based session management
   - _Requirements: 1.4, 1.5, 2.5_
 
 - [ ] 3.1 Create useAuth hook for session management
 
   - Create `frontend/src/hooks/useAuth.js` with session-based authentication
-  - Implement login, logout, and authentication state management
+  - Implement login, logout, and authentication state management using session endpoints
   - Add automatic session validation and refresh handling
+  - Handle authentication state without direct token access
   - _Requirements: 1.5, 2.1, 2.2, 2.5_
 
 - [ ] 3.2 Update App.jsx for cookie-based authentication
 
-  - Modify authentication flow to use session endpoints instead of Bearer tokens
-  - Update login handler to call session creation endpoint
-  - Remove any direct token handling or localStorage usage
+  - Replace current authentication flow to use new useAuth hook
+  - Update login handler to call session creation endpoint with credentials: 'include'
+  - Remove direct token handling from handleCredentialResponse
+  - Update logout functionality to call session invalidation endpoint
   - _Requirements: 1.4, 1.5, 3.2_
 
 - [ ] 3.3 Add session state management
 
-  - Implement automatic session validation on app startup
+  - Implement automatic session validation on app startup using /auth/me endpoint
   - Add session refresh handling for expired sessions
-  - Update logout functionality to call session invalidation endpoint
+  - Update all API calls to include credentials: 'include' for cookie support
   - _Requirements: 2.1, 2.2, 3.2_
 
-- [ ] 3.4 Write frontend authentication tests
+- [ ]* 3.4 Write frontend authentication tests
 
   - Test useAuth hook functionality and state management
   - Test authentication flow integration with backend sessions
