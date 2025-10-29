@@ -28,8 +28,8 @@ This project demonstrates a **secure fullstack web app** with enterprise-grade a
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/yourname/yourrepo.git
-cd yourrepo
+git clone https://github.com/Pitrified/fullstack-render-app.git
+cd fullstack-render-app
 ```
 
 ### 2. Setup PostgreSQL Locally
@@ -137,12 +137,12 @@ Notes:
 - Frontend dev server runs at `http://localhost:5173` and should be configured to use `VITE_API_BASE_URL=http://localhost:8000` in `frontend/.env.local`.
 - Use the Google OAuth client configured with `http://localhost:5173` as an authorized origin.
 
-## 🔗 Internal Communication (Render)
+## 🔗 Service Communication
 
-This app is configured to use Render's internal networking for communication between services:
+This app is configured for communication between frontend and backend:
 
 - **Local Development**: Frontend uses `http://localhost:8000` (via `VITE_API_BASE_URL` in `.env.local`)
-- **Render Deployment**: Frontend uses `http://fastapi-backend:8000` (internal hostname) for secure, low-latency communication
+- **Render Deployment**: Frontend uses `https://fastapi-backend-yf8l.onrender.com` (configured in `render.yaml`)
 
 
 ## 🚀 Deploy to Render
@@ -158,9 +158,9 @@ This app is configured to use Render's internal networking for communication bet
      - `GOOGLE_CLIENT_ID` (your Google OAuth client ID)
      - `SESSION_SECRET` (generate with: `python -c "import secrets; print(secrets.token_urlsafe(32))"`)
    - **frontend service**: 
-     - `VITE_GOOGLE_CLIENT_ID` (same as backend)
+     - `VITE_GOOGLE_CLIENT_ID` (same as backend GOOGLE_CLIENT_ID)
    
-   Note: `VITE_API_BASE_URL`, `ENVIRONMENT`, and `COOKIE_DOMAIN` are automatically set in `render.yaml`.
+   Note: `VITE_API_BASE_URL` is automatically set in `render.yaml`.
 
 You're live! 🎉
 

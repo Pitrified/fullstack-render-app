@@ -14,8 +14,8 @@ app.add_middleware(
         "https://react-frontend-t2b1.onrender.com",  # Render frontend
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
 )
 
 
