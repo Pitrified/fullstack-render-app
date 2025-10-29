@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
+from fastapi import Response
+
 logger = logging.getLogger(__name__)
 
 
@@ -142,10 +144,6 @@ class SessionManager:
 
 # Global session manager instance
 session_manager = SessionManager()
-
-from typing import Optional
-
-from fastapi import Response
 
 
 class CookieManager:

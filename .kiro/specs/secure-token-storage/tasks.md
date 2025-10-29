@@ -28,14 +28,14 @@
   - Verify secure session ID generation
   - _Requirements: 1.1, 3.3, 3.4_
 
-- [ ] 2. Update authentication system for cookie-based sessions
+- [x] 2. Update authentication system for cookie-based sessions
 
   - Create new session-based authentication endpoints
   - Update authentication middleware to support cookie-based sessions
   - Replace Bearer token authentication with session validation
   - _Requirements: 1.4, 2.3, 2.4, 4.4_
 
-- [ ] 2.1 Create session authentication endpoints
+- [x] 2.1 Create session authentication endpoints
 
   - Add POST /auth/login endpoint that creates sessions from Google tokens and sets httpOnly cookies
   - Add POST /auth/logout endpoint that invalidates sessions and clears cookies
@@ -43,7 +43,7 @@
   - Add POST /auth/refresh endpoint for session refresh
   - _Requirements: 1.1, 3.2, 3.5_
 
-- [ ] 2.2 Update authentication middleware
+- [x] 2.2 Update authentication middleware
 
   - Create get_current_user_from_session function to validate sessions from cookies
   - Add session-based user retrieval and validation
@@ -51,14 +51,14 @@
   - Keep existing get_current_user for backward compatibility during transition
   - _Requirements: 2.3, 2.4, 4.2, 4.3_
 
-- [ ] 2.3 Initialize session manager in main.py
+- [x] 2.3 Initialize session manager in main.py
 
   - Import and initialize the global session_manager
   - Start the session cleanup background task on application startup
   - Update CORS middleware to allow credentials for cookie-based authentication
   - _Requirements: 3.4, 4.5_
 
-- [ ] 2.4 Write integration tests for authentication endpoints
+- [x] 2.4 Write integration tests for authentication endpoints
 
   - Test complete authentication flow from Google OAuth to session creation
   - Test session validation and user retrieval
@@ -124,6 +124,7 @@
   - _Requirements: 1.4, 4.2_
 
 - [ ] 4.3 Add comprehensive security tests
+
   - Test XSS protection by verifying tokens are not accessible from JavaScript
   - Test CSRF protection with SameSite cookie attributes
   - Test session hijacking prevention and security headers
