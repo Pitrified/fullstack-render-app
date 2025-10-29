@@ -95,7 +95,7 @@
   - Update all API calls to include credentials: 'include' for cookie support
   - _Requirements: 2.1, 2.2, 3.2_
 
-- [ ]* 3.4 Write frontend authentication tests
+- [ ] 3.4 Write frontend authentication tests
 
   - Test useAuth hook functionality and state management
   - Test authentication flow integration with backend sessions
@@ -104,34 +104,33 @@
 
 - [ ] 4. Add security hardening and cleanup
 
-  - Implement session cleanup background task
   - Add comprehensive error handling with generic messages
-  - Remove deprecated Bearer token authentication code
+  - Remove deprecated Bearer token authentication code after migration
+  - Implement additional security measures and testing
   - _Requirements: 3.4, 4.2, 4.3, 4.5_
 
-- [ ] 4.1 Implement session cleanup task
-
-  - Add background task for cleaning up expired sessions
-  - Implement session garbage collection with configurable intervals
-  - Add logging for session cleanup operations
-  - _Requirements: 3.4, 4.5_
-
-- [ ] 4.2 Add security error handling
+- [ ] 4.1 Add security error handling
 
   - Update all authentication error responses to use generic messages
   - Add proper logging for security events without exposing sensitive data
-  - Implement rate limiting protection for authentication endpoints
+  - Implement consistent error handling across all session endpoints
   - _Requirements: 4.2, 4.3, 4.5_
 
-- [ ] 4.3 Remove deprecated authentication code
+- [ ] 4.2 Remove deprecated authentication code
 
-  - Remove Bearer token authentication from existing endpoints
-  - Clean up any remaining localStorage token references
-  - Update API documentation to reflect cookie-based authentication
+  - Remove Bearer token authentication from existing endpoints after session migration
+  - Update /login endpoint to use session-based authentication only
+  - Clean up any remaining direct token handling references
   - _Requirements: 1.4, 4.2_
 
-- [ ] 4.4 Add comprehensive security tests
+- [ ] 4.3 Add comprehensive security tests
   - Test XSS protection by verifying tokens are not accessible from JavaScript
   - Test CSRF protection with SameSite cookie attributes
   - Test session hijacking prevention and security headers
   - _Requirements: 1.2, 1.3, 4.1_
+
+- [ ] 4.4 Add rate limiting protection
+  - Implement rate limiting for authentication endpoints
+  - Add protection against brute force attacks on session endpoints
+  - Configure appropriate rate limits for login attempts
+  - _Requirements: 4.2, 4.5_
