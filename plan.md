@@ -169,8 +169,8 @@ npm install react-router-dom
 ```
 
 ### Step 2: Create Auth Context
-- Implement AuthContext with token management
-- Add localStorage persistence
+- Implement AuthContext with session management
+- Add secure httpOnly cookie persistence
 - Create useAuth hook
 
 ### Step 3: Add Routing
@@ -190,8 +190,8 @@ npm install react-router-dom
 
 ### Step 6: API Integration
 - Create centralized API client
-- Implement automatic auth headers
-- Add error handling for expired tokens
+- Implement automatic session credentials
+- Add error handling for expired sessions
 
 ### Step 7: Polish UX
 - Add loading states
@@ -211,9 +211,9 @@ npm install react-router-dom
 - **Fallback**: Redirect to login page on auth failure
 
 ### Error Handling
-- **401 Unauthorized**: Clear tokens, redirect to login
+- **401 Unauthorized**: Clear sessions, redirect to login
 - **Network errors**: Show retry options
-- **Token expiry**: Automatic logout with notification
+- **Session expiry**: Automatic logout with notification
 
 ## Security Considerations
 
@@ -223,9 +223,9 @@ npm install react-router-dom
 - Validate sessions on each authenticated request
 
 ### API Security
-- All protected endpoints use `Depends(get_current_user)`
-- CORS properly configured
-- No sensitive data in frontend state
+- All protected endpoints use `Depends(get_current_user_from_session)`
+- CORS properly configured with credentials support
+- No sensitive data in frontend state or localStorage
 
 ### Future Enhancements
 - Consider refresh token implementation
@@ -238,11 +238,11 @@ npm install react-router-dom
 ### Frontend Tests
 - Auth context state management
 - Protected route behavior
-- Token expiry handling
+- Session expiry handling
 - Login/logout flows
 
 ### Backend Tests
-- Token validation edge cases
+- Session validation edge cases
 - Protected endpoint access
 - User creation/retrieval
 - Error response formats

@@ -124,19 +124,24 @@ raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Authentication fa
 
 - **Location**: All authentication endpoints
 - **Severity**: High
-- **Status**: ❌ **OPEN** - No rate limiting implemented
-- **Description**: No rate limiting on login attempts
-- **Impact**: Brute force attacks, token enumeration, DoS
-- **Fix**: Implement rate limiting
+- **Status**: ✅ **FIXED** - Rate limiting implemented for authentication endpoints
+- **Description**: Rate limiting implemented for login attempts and session operations
+- **Impact**: Protection against brute force attacks, token enumeration, DoS
+- **Security Enhancement Applied**: Custom rate limiter with IP-based tracking
 
 ```python
-from slowapi import Limiter
-limiter = Limiter(key_func=get_remote_address)
+# SECURE IMPLEMENTATION (CURRENT)
+from .rate_limiter import check_login_rate_limit, check_refresh_rate_limit
 
-@app.post("/login")
-@limiter.limit("5/minute")
-async def login(request: Request, user=Depends(get_current_user)):
-    return user
+@app.post("/auth/login")
+async def login_with_session(request: LoginRequest, response: Response, http_request: Request):
+    check_login_rate_limit(http_request)  # 3 requests per minute
+    # ... rest of login logic
+
+@app.post("/auth/refresh")
+async def refresh_session(http_request: Request):
+    check_refresh_rate_limit(http_request)  # 10 requests per minute
+    # ... rest of refresh logic
 ```
 
 #### 7. **Missing Security Headers**
@@ -211,12 +216,12 @@ if os.getenv("ENVIRONMENT") == "production":
 - **XSS Protection**: ✅ **FIXED** - DOMPurify-based input sanitization in frontend
 - **CORS Configuration**: ✅ **FIXED** - Restricted to specific methods and headers
 - **Token Storage Security**: ✅ **FIXED** - Implemented httpOnly cookies and server-side sessions
+- **Rate Limiting**: ✅ **FIXED** - Implemented for authentication endpoints with IP-based tracking
 - **Input Validation**: Comprehensive sanitization utilities
 
 ### ❌ Remaining Security Gaps
 
 - Database URL logging in production
-- Missing rate limiting on authentication endpoints
 - No security headers middleware
 - Detailed error messages in authentication failures
 
@@ -231,7 +236,7 @@ if os.getenv("ENVIRONMENT") == "production":
 
 ### ⚡ High Priority (Fix in 1 week)
 
-5. **Add rate limiting** to authentication endpoints
+5. ✅ **Rate limiting FIXED** - Implemented for authentication endpoints
 6. **Implement generic error messages** for auth failures
 7. **Add security headers middleware**
 8. **Enable HTTPS enforcement** in production
