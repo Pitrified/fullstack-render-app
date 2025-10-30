@@ -12,22 +12,22 @@ This is a **fullstack Google OAuth application** with clear service boundaries:
 
 ### Authentication Flow
 - Frontend uses Google Identity Services to get JWT tokens (`useGoogleIdentity` hook in `src/hooks/`)
-- Backend verifies Google JWT tokens using `google.oauth2.id_token.verify_oauth2_token()` in `auth.py`
-- User auto-creation on first login via `get_current_user()` dependency
-- Bearer token passed via `Authorization` header for API calls
+- Backend creates secure sessions from Google JWT tokens via `/auth/login` endpoint
+- User auto-creation on first login via session creation process
+- Session-based authentication using httpOnly cookies (no Bearer tokens)
 
-### OAuth Verification Details
-- **Stateless Design**: No server-side sessions - each request carries Google JWT token
-- **Token Verification**: `get_current_user()` validates token signature, expiry, and audience on every request
-- **Auto-User Creation**: New users are inserted into DB on first successful OAuth verification
-- **Token Lifecycle**: Google JWTs are short-lived (1 hour) - frontend should handle re-authentication
-- **Protected Routes**: Any endpoint using `Depends(get_current_user)` automatically requires valid Google token
+### Session Management Details
+- **Session-based Design**: Server-side sessions with httpOnly cookies for security
+- **Session Verification**: `get_current_user_from_session()` validates sessions on every request
+- **Auto-User Creation**: New users are inserted into DB on first successful session creation
+- **Session Lifecycle**: Sessions managed server-side with automatic cleanup and refresh
+- **Protected Routes**: Any endpoint using `Depends(get_current_user_from_session)` requires valid session
 
 ### Session & Protected Page Patterns
-- **Current State**: No persistent sessions - token must be stored/managed by frontend (localStorage, state, etc.)
-- **Protected API Calls**: All require `Authorization: Bearer {google_jwt_token}` header
-- **Frontend Protection**: Currently no route protection - App.jsx only shows login UI
-- **Missing Pieces**: No token refresh logic, no frontend auth state management, no protected route components
+- **Current State**: Secure server-side sessions with httpOnly cookies
+- **Protected API Calls**: All use `credentials: 'include'` for cookie-based authentication
+- **Frontend Protection**: Complete authentication state management with useAuth hook
+- **Implemented Features**: Session refresh logic, frontend auth state management, protected route handling
 
 ### Database Architecture
 - **Async-first**: All DB operations use `AsyncSession` and `await`
@@ -77,20 +77,19 @@ cd frontend && npm install && npm run dev
 
 ### Implementing Protected Pages
 ```javascript
-// Frontend token storage pattern
-const [user, setUser] = useState(null);
-const [token, setToken] = useState(localStorage.getItem('google_token'));
+// Frontend session-based authentication pattern
+import { useAuth } from './hooks/useAuth';
+
+const { user, login, logout, loading } = useAuth();
 
 // Protected API call pattern
 const apiCall = async (endpoint) => {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    headers: { Authorization: `Bearer ${token}` }
+    credentials: 'include'  // Include httpOnly cookies
   });
   if (response.status === 401) {
-    // Token expired - redirect to login
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('google_token');
+    // Session expired - redirect to login
+    logout();
   }
   return response;
 };
@@ -99,7 +98,7 @@ const apiCall = async (endpoint) => {
 ```python
 # Backend protected endpoint pattern
 @app.get("/protected-data")
-async def get_protected_data(current_user=Depends(get_current_user)):
-    # current_user is automatically populated from valid Google JWT
+async def get_protected_data(current_user=Depends(get_current_user_from_session)):
+    # current_user is automatically populated from valid session
     return {"data": "secret", "user_id": current_user["id"]}
 ```
