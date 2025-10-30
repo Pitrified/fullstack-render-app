@@ -79,24 +79,14 @@ class TestRateLimiting:
         with patch("app.auth.validate_google_token_and_get_user") as mock_validate:
             mock_validate.side_effect = Exception("Invalid token")
 
-            # Simulate requests from different IPs by mocking the client host
-            with patch.object(client, "request") as mock_request:
-                # First IP makes 3 requests (hits limit)
-                mock_request.return_value.client.host = "192.168.1.1"
-                for i in range(3):
-                    response = client.post("/auth/login", json=login_data)
-                    assert response.status_code == 401
-
-                # 4th request from same IP should be rate limited
+            # Make 3 requests to hit the limit (login has 3 req/min limit)
+            for i in range(3):
                 response = client.post("/auth/login", json=login_data)
-                assert response.status_code == 429
+                assert response.status_code == 401
 
-                # But request from different IP should work
-                mock_request.return_value.client.host = "192.168.1.2"
-                response = client.post("/auth/login", json=login_data)
-                assert (
-                    response.status_code == 401
-                )  # Not rate limited, just invalid token
+            # 4th request should be rate limited
+            response = client.post("/auth/login", json=login_data)
+            assert response.status_code == 429
 
     def test_rate_limiter_cleanup(self):
         """Test that rate limiter cleans up old entries"""

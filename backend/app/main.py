@@ -6,6 +6,7 @@ from .auth import get_current_user_from_session
 from .database import engine, get_db
 from .models import Base
 from .rate_limiter import (
+    check_auth_rate_limit,
     check_login_rate_limit,
     check_refresh_rate_limit,
 )
@@ -135,7 +136,7 @@ async def refresh_session(request: Request, response: Response):
         session_id = CookieManager.get_session_id_from_cookies(request.cookies)
         if not session_id:
             log_authentication_attempt(request, False, reason="no_session_for_refresh")
-            raise HTTPException(status_code=401, detail="Authentication required")
+            raise HTTPException(status_code=401, detail="No session found")
 
         # Get user ID for logging
         session_data = await session_manager.validate_session(session_id)
@@ -146,7 +147,7 @@ async def refresh_session(request: Request, response: Response):
             log_authentication_attempt(
                 request, False, user_id, "session_refresh_failed"
             )
-            raise HTTPException(status_code=401, detail="Authentication required")
+            raise HTTPException(status_code=401, detail="Session refresh failed")
 
         # Reset cookie with new expiration
         CookieManager.set_session_cookie(response, session_id)

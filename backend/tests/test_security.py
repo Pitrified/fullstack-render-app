@@ -117,6 +117,8 @@ class TestSecurityFeatures:
     @pytest.mark.asyncio
     async def test_session_hijacking_prevention_malformed_session_id(self, client):
         """Test session hijacking prevention with malformed session IDs"""
+        from app.rate_limiter import rate_limiter
+
         malformed_session_ids = [
             "",  # Empty string
             "short",  # Too short
@@ -126,7 +128,11 @@ class TestSecurityFeatures:
             "<script>alert('xss')</script>",  # XSS attempt
         ]
 
-        for malformed_id in malformed_session_ids:
+        for i, malformed_id in enumerate(malformed_session_ids):
+            # Reset rate limiter every 5 requests to avoid hitting the limit
+            if i > 0 and i % 5 == 0:
+                rate_limiter.requests.clear()
+
             client.cookies.set("auth_session", malformed_id)
 
             response = client.get("/auth/me")
