@@ -30,13 +30,16 @@
 
 - [ ] 5. Integrate secure logging with existing authentication system
 
-  - Update auth.py to use secure logging manager instead of direct logging
-  - Ensure no sensitive token information is logged in production
-  - Maintain existing security logging functionality with enhanced redaction
+  - Update auth.py to use secure logging manager instead of direct Python logging
+  - Replace `logging.getLogger(__name__)` with `get_secure_logger(__name__)`
+  - Ensure no sensitive token information is logged in production through automatic redaction
+  - Maintain existing security logging functionality with enhanced redaction capabilities
   - _Requirements: 2.4, 4.2, 4.5_
 
 - [ ] 6. Add comprehensive testing for secure logging
-  - Write unit tests for redaction patterns and environment detection
-  - Create integration tests for end-to-end secure logging flow
+  - Write unit tests for SecureLoggerManager redaction patterns and environment detection
+  - Create unit tests for AppConfig environment-specific configuration
+  - Write integration tests for database logging security in different environments
   - Implement security tests to verify no credentials are exposed in production logs
+  - Add tests for production configuration validation
   - _Requirements: 4.1, 4.3, 4.4_
