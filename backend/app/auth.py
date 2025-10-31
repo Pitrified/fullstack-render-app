@@ -1,4 +1,3 @@
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -10,6 +9,7 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 
 from .database import get_db
 from .models import User
+from .secure_logger import get_secure_logger
 from .security_logger import (
     log_authentication_attempt,
     log_security_violation,
@@ -17,7 +17,7 @@ from .security_logger import (
 )
 from .session import CookieManager, session_manager
 
-logger = logging.getLogger(__name__)
+logger = get_secure_logger(__name__)
 
 load_dotenv()
 

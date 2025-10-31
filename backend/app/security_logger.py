@@ -2,23 +2,14 @@
 Security logging utilities for authentication events
 """
 
-import logging
 from typing import Optional
 
 from fastapi import Request
 
-# Configure security logger
-security_logger = logging.getLogger("security")
-security_logger.setLevel(logging.INFO)
+from .secure_logger import get_secure_logger
 
-# Create handler if not exists
-if not security_logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - SECURITY - %(levelname)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    security_logger.addHandler(handler)
+# Configure security logger with secure logging manager
+security_logger = get_secure_logger("security")
 
 
 def log_authentication_attempt(
