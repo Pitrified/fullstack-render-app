@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from .auth import get_current_user_from_session
+from .config import get_app_config
 from .database import engine, get_db
 from .models import Base
 from .rate_limiter import (
@@ -10,6 +11,7 @@ from .rate_limiter import (
     check_login_rate_limit,
     check_refresh_rate_limit,
 )
+from .secure_logger import get_secure_logger_manager
 from .security_logger import (
     log_authentication_attempt,
     log_security_violation,
@@ -33,17 +35,72 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Initialize secure logging infrastructure
+    config = get_app_config()
+    logger_manager = get_secure_logger_manager()
+    logger = logger_manager.get_logger(__name__)
+
+    # Log application startup with environment info
+    logger.info(f"Application starting in {config.environment} mode")
+
+    # Validate production configuration
+    if config.is_production():
+        validation_errors = config.validate_production_config()
+        if validation_errors:
+            logger.error("Production configuration validation failed:")
+            for error in validation_errors:
+                logger.error(f"  - {error}")
+            raise RuntimeError(
+                "Invalid production configuration - see logs for details"
+            )
+        else:
+            logger.info("Production configuration validation passed")
+
+    # Configure database logging with security considerations
+    logger_manager.configure_database_logging(engine)
+
+    # Log safe database connection info
+    if config.is_development():
+        logger.info(f"Database configured: {config.get_safe_database_info()}")
+    else:
+        logger.info("Database connection established")
+
+    # Initialize database tables
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {str(e)}")
+        raise
 
     # Start session cleanup background task
-    await session_manager.start_cleanup_task()
+    try:
+        await session_manager.start_cleanup_task()
+        logger.info("Session cleanup task started")
+    except Exception as e:
+        logger.error(f"Failed to start session cleanup task: {str(e)}")
+        raise
+
+    logger.info("Application startup completed successfully")
 
 
 @app.on_event("shutdown")
 async def shutdown():
+    # Get logger for shutdown events
+    logger_manager = get_secure_logger_manager()
+    logger = logger_manager.get_logger(__name__)
+
+    logger.info("Application shutdown initiated")
+
     # Stop session cleanup background task
-    await session_manager.stop_cleanup_task()
+    try:
+        await session_manager.stop_cleanup_task()
+        logger.info("Session cleanup task stopped")
+    except Exception as e:
+        logger.error(f"Error stopping session cleanup task: {str(e)}")
+
+    logger.info("Application shutdown completed")
 
 
 # Request models
