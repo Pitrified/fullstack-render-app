@@ -53,6 +53,8 @@ vitest           # Testing framework
 
 The backend is located in the `backend/` directory and uses a Python virtual environment.
 
+**IMPORTANT**: Always activate the virtual environment before running any Python commands!
+
 ```bash
 # Navigate to backend directory
 cd backend
@@ -73,10 +75,12 @@ uvicorn app.main:app --reload
 
 ### Backend Testing
 
+**IMPORTANT**: Always activate the virtual environment first!
+
 ```bash
 # Navigate to backend and activate venv
 cd backend
-source venv/bin/activate
+source venv/bin/activate  # REQUIRED before any Python commands
 
 # Run all tests
 python -m pytest
