@@ -22,11 +22,15 @@ class SecureFormatter(logging.Formatter):
 
     def format(self, record):
         """Format the log record with sensitive data redaction"""
-        # Get the original formatted message
-        original_message = super().format(record)
+        try:
+            # Get the original formatted message
+            original_message = super().format(record)
 
-        # Apply redaction patterns
-        return self.redact_patterns(original_message)
+            # Apply redaction patterns
+            return self.redact_patterns(original_message)
+        except Exception:
+            # If formatting fails, return safe default
+            return "[REDACTED - PROCESSING ERROR]"
 
     def redact_patterns(self, message: str) -> str:
         """Apply redaction patterns to a message"""
@@ -132,15 +136,17 @@ class SecureLoggerManager:
         "database_url": r"postgresql\+?[^:]*://[^:]+:[^@]+@[^/]+/\w+",
         "password": r'password["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "token": r'token["\']?\s*[:=]\s*["\']?[^"\'\s]+',
-        "bearer_token": r"Bearer\s+[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+",
+        "bearer_token": r"Bearer\s+[A-Za-z0-9\-_\.]+",
+        "bearer_simple": r"Bearer\s+[A-Za-z0-9]+",
         "secret": r'secret["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "key": r'key["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "api_key": r'api[_-]?key["\']?\s*[:=]\s*["\']?[^"\'\s]+',
-        "session_id": r'session[_-]?id["\']?\s*[:=]\s*["\']?[^"\'\s]{16,}',
+        "session_id": r'session[_-]?id["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "jwt": r"eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+",
         "credit_card": r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b",
         "ssn": r"\b\d{3}-\d{2}-\d{4}\b",
         "email_in_url": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
+        "pwd": r'pwd["\']?\s*[:=]\s*["\']?[^"\'\s]+',
     }
 
     def __init__(self, environment: Optional[str] = None):
