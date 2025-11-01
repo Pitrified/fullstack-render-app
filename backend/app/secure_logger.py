@@ -142,6 +142,8 @@ class SecureLoggerManager:
         "key": r'key["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "api_key": r'api[_-]?key["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "session_id": r'session[_-]?id["\']?\s*[:=]\s*["\']?[^"\'\s]+',
+        "url_safe_token": r"\b[A-Za-z0-9\-_]{20,}\b",  # URL-safe tokens like from secrets.token_urlsafe()
+        "google_token": r'google[_-]?token["\']?\s*[:=]\s*["\']?[^"\'\s]+',
         "jwt": r"eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+",
         "credit_card": r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b",
         "ssn": r"\b\d{3}-\d{2}-\d{4}\b",

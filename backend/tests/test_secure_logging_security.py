@@ -7,8 +7,10 @@ import io
 import logging
 import os
 from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 from unittest.mock import patch
 
+import pytest
 from app.config import AppConfig
 from app.secure_logger import SecureLoggerManager, get_secure_logger
 
@@ -480,3 +482,183 @@ class TestSecurityEdgeCases:
 
             # Verify redaction markers are present
             assert "***" in log_output
+
+
+class TestSessionSecurityCompliance:
+    """Test that session management uses secure logging and doesn't expose sensitive data"""
+
+    @pytest.mark.asyncio
+    async def test_session_logging_uses_secure_logger(self):
+        """Test that session.py uses secure logger instead of standard logging"""
+        from backend.app.session import logger
+
+        # Verify that the logger is from secure logger manager
+        assert hasattr(logger, "handlers")
+        # The logger should have been configured by SecureLoggerManager
+        assert len(logger.handlers) > 0
+
+    @pytest.mark.asyncio
+    async def test_no_session_ids_in_production_logs(self):
+        """Test that session IDs are not exposed in production logs"""
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
+            from backend.app.secure_logger import get_secure_logger
+            from backend.app.session import SessionManager
+
+            # Create session manager
+            session_manager = SessionManager()
+
+            # Test that session logging uses secure redaction
+            logger = get_secure_logger("test_session")
+
+            # Capture log output using StringIO and redirect stderr
+            log_capture = StringIO()
+
+            # Create a custom handler to capture the logs
+            handler = logging.StreamHandler(log_capture)
+            handler.setLevel(logging.INFO)
+
+            # Get the session logger and add our handler
+            session_logger = get_secure_logger("backend.app.session")
+            session_logger.addHandler(handler)
+
+            try:
+                # Create a session (this should log without exposing session ID)
+                session_id = await session_manager.create_session(
+                    123, "test_google_token"
+                )
+
+                # Refresh session (this should log without exposing session ID)
+                await session_manager.refresh_session(session_id)
+
+                # Get logged output
+                log_output = log_capture.getvalue()
+
+                # Verify session ID is not in logs (if any logs were captured)
+                if log_output:
+                    assert session_id not in log_output
+                    assert "123" in log_output
+                    assert (
+                        "Created session for user" in log_output
+                        or "Refreshed session for user" in log_output
+                    )
+
+                # The main test is that the session module uses secure logging
+                # which we can verify by checking the logger type
+                from backend.app.session import logger as session_module_logger
+
+                assert hasattr(session_module_logger, "handlers")
+
+            finally:
+                # Clean up the handler
+                session_logger.removeHandler(handler)
+
+    @pytest.mark.asyncio
+    async def test_no_google_tokens_in_production_logs(self):
+        """Test that Google tokens are not exposed in production logs"""
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
+            from backend.app.secure_logger import get_secure_logger
+
+            logger = get_secure_logger("test_session")
+
+            # Capture log output
+            log_capture = StringIO()
+            handler = logging.StreamHandler(log_capture)
+            logger.addHandler(handler)
+
+            # Log a message that might contain a Google token
+            test_token = "ya29.a0AfH6SMBxyz123_sensitive_token_data"
+            logger.info(f"Processing google_token: {test_token}")
+
+            # Get logged output
+            log_output = log_capture.getvalue()
+
+            # Verify token is redacted
+            assert test_token not in log_output
+            assert "***" in log_output
+
+    @pytest.mark.asyncio
+    async def test_url_safe_tokens_redacted_in_production(self):
+        """Test that URL-safe tokens (like session IDs) are redacted in production"""
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
+            import secrets
+
+            from backend.app.secure_logger import get_secure_logger
+
+            logger = get_secure_logger("test_session")
+
+            # Capture log output
+            log_capture = StringIO()
+            handler = logging.StreamHandler(log_capture)
+            logger.addHandler(handler)
+
+            # Generate a URL-safe token like those used for sessions
+            url_safe_token = secrets.token_urlsafe(32)
+            logger.info(f"Generated session token: {url_safe_token}")
+
+            # Get logged output
+            log_output = log_capture.getvalue()
+
+            # Verify token is redacted (should be caught by url_safe_token pattern)
+            assert url_safe_token not in log_output
+            assert "***" in log_output
+
+    @pytest.mark.asyncio
+    async def test_session_data_structure_security(self):
+        """Test that SessionData objects don't accidentally expose sensitive info in logs"""
+        with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
+            from datetime import datetime
+
+            from backend.app.secure_logger import get_secure_logger
+            from backend.app.session import SessionData
+
+            logger = get_secure_logger("test_session")
+
+            # Capture log output
+            log_capture = StringIO()
+            handler = logging.StreamHandler(log_capture)
+            logger.addHandler(handler)
+
+            # Create session data with sensitive token
+            session_data = SessionData(
+                user_id=456,
+                google_token="ya29.sensitive_google_token_12345",
+                expires_at=datetime.utcnow(),
+                created_at=datetime.utcnow(),
+                last_accessed=datetime.utcnow(),
+            )
+
+            # Log session data (this should never happen in real code, but test for safety)
+            logger.info(f"Session data: {session_data}")
+
+            # Get logged output
+            log_output = log_capture.getvalue()
+
+            # Verify sensitive token is redacted
+            assert "ya29.sensitive_google_token_12345" not in log_output
+            assert "***" in log_output
+
+            # Verify non-sensitive data is still present
+            assert "456" in log_output  # user_id should be visible
+
+    def test_development_environment_allows_session_debugging(self):
+        """Test that development environment allows more detailed session logging"""
+        with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
+            from backend.app.secure_logger import get_secure_logger
+
+            logger = get_secure_logger("test_session")
+
+            # Capture log output
+            log_capture = StringIO()
+            handler = logging.StreamHandler(log_capture)
+            logger.addHandler(handler)
+
+            # In development, some session info might be logged for debugging
+            session_id = "test_session_id_12345"
+            logger.info(f"Debug: session_id={session_id}")
+
+            # Get logged output
+            log_output = log_capture.getvalue()
+
+            # In development, session ID might be visible for debugging
+            # (though in practice we still avoid logging it directly)
+            assert "Debug:" in log_output

@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -7,7 +6,9 @@ from typing import Dict, Optional
 
 from fastapi import Response
 
-logger = logging.getLogger(__name__)
+from .secure_logger import get_secure_logger
+
+logger = get_secure_logger(__name__)
 
 
 @dataclass
@@ -78,7 +79,7 @@ class SessionManager:
         session_data.expires_at = datetime.utcnow() + timedelta(
             hours=self.session_timeout_hours
         )
-        logger.info(f"Refreshed session {session_id}")
+        logger.info(f"Refreshed session for user {session_data.user_id}")
         return True
 
     async def invalidate_session(self, session_id: str) -> bool:
