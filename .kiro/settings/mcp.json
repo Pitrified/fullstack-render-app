@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "render": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch",
+        "https://mcp.render.com"
+      ],
+      "env": {
+        "RENDER_API_KEY": "${RENDER_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

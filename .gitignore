@@ -1,4 +1,5 @@
 .env
+.kiro/settings/.env
 
 __pycache__/
 backend/.env
