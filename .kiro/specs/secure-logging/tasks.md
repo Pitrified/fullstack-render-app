@@ -36,7 +36,14 @@
   - Maintain existing security logging functionality with enhanced redaction capabilities
   - _Requirements: 2.4, 4.2, 4.5_
 
-- [x] 6. Add comprehensive testing for secure logging
+- [ ] 6. Update session management with secure logging
+
+  - Replace `logging.getLogger(__name__)` with `get_secure_logger(__name__)` in session.py
+  - Ensure session-related logging uses secure redaction patterns
+  - Verify no session IDs or sensitive session data are exposed in production logs
+  - _Requirements: 2.4, 4.2, 4.5_
+
+- [x] 7. Add comprehensive testing for secure logging
   - Write unit tests for SecureLoggerManager redaction patterns and environment detection
   - Create unit tests for AppConfig environment-specific configuration and validation methods
   - Write unit tests for SensitiveDataFilter and SecureFormatter classes
