@@ -55,56 +55,83 @@ docker rm pg-local
 
 Or install PostgreSQL and create the DB manually.
 
-### 3. Backend Setup
+### 3. Environment Configuration
+
+#### Backend Environment Variables (`backend/.env`)
+
+Copy `backend/.env.example` to `backend/.env` and configure:
+
+```bash
+# Required for all environments
+GOOGLE_CLIENT_ID=your_google_client_id_here
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mydb
+SESSION_SECRET=your_very_secure_random_string_here_at_least_32_characters_long
+
+# Optional - defaults shown
+ENVIRONMENT=development
+LOG_LEVEL=INFO
+
+# Production only (not needed for local development)
+# COOKIE_DOMAIN=yourdomain.com
+```
+
+**Generate a secure SESSION_SECRET:**
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+#### Frontend Environment Variables (`frontend/.env.local`)
+
+Copy `frontend/.env.example` to `frontend/.env.local` and configure:
+
+```bash
+# Required
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+
+# For local development
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+### 4. Google OAuth Setup
+
+1. Go to https://console.cloud.google.com/apis/credentials
+2. Create OAuth 2.0 Client ID:
+   - Application type: **Web application**
+   - Name: Your app name
+   - Authorized JavaScript origins:
+     - `http://localhost:5173` (for local development)
+     - `https://your-frontend-domain.com` (for production)
+3. Copy the Client ID to both:
+   - `backend/.env`: `GOOGLE_CLIENT_ID=your_client_id`
+   - `frontend/.env.local`: `VITE_GOOGLE_CLIENT_ID=your_client_id`
+
+### 5. Backend Setup
 
 ```bash
 cd backend
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Create environment file
-cp .env.example .env
-# Edit .env and add your GOOGLE_CLIENT_ID and SESSION_SECRET
-
+# Ensure .env is configured (see step 3)
 uvicorn app.main:app --reload
 ```
 
-**Important**: Generate a secure SESSION_SECRET:
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-### 4. Frontend Setup
+### 6. Frontend Setup
 
 ```bash
 cd frontend
 npm install
+# Ensure .env.local is configured (see step 3)
 npm run dev
 ```
 
-### 5. Google OAuth Setup
+### 7. Quick Start Commands
 
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Create OAuth 2.0 Client ID:
-   - Web App
-   - Add http://localhost:5173 as Authorized JS Origin
-3. Copy client ID to:
-   - `frontend/.env.local`: `VITE_GOOGLE_CLIENT_ID`
-   - `backend/.env`: `GOOGLE_CLIENT_ID`
-4. Generate secure session secret:
-   ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
-   Add to `backend/.env`: `SESSION_SECRET=your_generated_secret`
+After completing the environment configuration above, use these commands:
 
-### 6. Quick Local Run (Docker + Backend + Frontend)
-
-Use these commands to start PostgreSQL, the FastAPI backend (using the `venv` in `backend`), and the React frontend for local testing.
-
-1) Start PostgreSQL in Docker (if not already running):
-
+**Terminal 1 - Database:**
 ```bash
-# Run Postgres container
+# Start PostgreSQL in Docker
 docker run --name pg-local -p 5432:5432 \
    -e POSTGRES_PASSWORD=postgres \
    -e POSTGRES_DB=mydb -d postgres
@@ -113,29 +140,23 @@ docker run --name pg-local -p 5432:5432 \
 docker start pg-local
 ```
 
-2) Start the backend (from project root):
-
+**Terminal 2 - Backend:**
 ```bash
-# Activate the virtualenv and run the backend
 cd backend
 source venv/bin/activate
-pip install -r requirements.txt
-# Ensure .env is configured (see step 3)
 uvicorn app.main:app --reload --port 8000
 ```
 
-3) Start the frontend (in a new terminal):
-
+**Terminal 3 - Frontend:**
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-Notes:
-- The backend expects the database at `postgresql://postgres:postgres@localhost:5432/mydb` by default (see `.env.example`).
-- Frontend dev server runs at `http://localhost:5173` and should be configured to use `VITE_API_BASE_URL=http://localhost:8000` in `frontend/.env.local`.
-- Use the Google OAuth client configured with `http://localhost:5173` as an authorized origin.
+**Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
 ## 🔗 Service Communication
 
@@ -145,22 +166,89 @@ This app is configured for communication between frontend and backend:
 - **Render Deployment**: Frontend uses `https://fastapi-backend-yf8l.onrender.com` (configured in `render.yaml`)
 
 
-## 🚀 Deploy to Render
+## 🚀 Production Deployment on Render
 
-1. Push the repo to GitHub
-2. Create a new Blueprint on Render: https://dashboard.render.com/blueprint/new, it will detect the `render.yaml` at the root
-3. Render will auto-deploy:
-   - Static React site
-   - FastAPI backend
-   - PostgreSQL DB
-4. Manually set the following **environment variables** in Render:
-   - **backend service**: 
-     - `GOOGLE_CLIENT_ID` (your Google OAuth client ID)
-     - `SESSION_SECRET` (generate with: `python -c "import secrets; print(secrets.token_urlsafe(32))"`)
-   - **frontend service**: 
-     - `VITE_GOOGLE_CLIENT_ID` (same as backend GOOGLE_CLIENT_ID)
-   
-   Note: `VITE_API_BASE_URL` is automatically set in `render.yaml`.
+### Automatic Deployment Setup
+
+1. **Push to GitHub**: Ensure your code is in a GitHub repository
+2. **Create Render Blueprint**: 
+   - Go to https://dashboard.render.com/blueprint/new
+   - Connect your GitHub repository
+   - Render will detect the `render.yaml` configuration
+3. **Deploy**: Render automatically creates:
+   - PostgreSQL database (`userdb`)
+   - FastAPI backend service (`fastapi-backend`)
+   - React frontend static site (`react-frontend`)
+
+### Required Production Environment Variables
+
+After deployment, manually configure these environment variables in the Render dashboard:
+
+#### Backend Service Environment Variables
+Navigate to your backend service settings and add:
+
+```bash
+# Required - Set manually in Render dashboard
+GOOGLE_CLIENT_ID=your_google_client_id_here
+SESSION_SECRET=your_secure_session_secret_here
+
+# Optional - Production optimizations
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+```
+
+**Generate SESSION_SECRET for production:**
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+#### Frontend Service Environment Variables
+Navigate to your frontend service settings and add:
+
+```bash
+# Required - Set manually in Render dashboard
+VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
+
+# Automatically configured in render.yaml
+VITE_API_BASE_URL=https://fastapi-backend-yf8l.onrender.com
+```
+
+#### Automatically Configured Variables
+These are set automatically by `render.yaml`:
+- `DATABASE_URL` - Connected to the PostgreSQL service
+- `VITE_API_BASE_URL` - Points to your backend service URL
+
+### Google OAuth Production Setup
+
+Update your Google OAuth configuration for production:
+
+1. Go to https://console.cloud.google.com/apis/credentials
+2. Edit your OAuth 2.0 Client ID
+3. Add your production domains to **Authorized JavaScript origins**:
+   - `https://your-frontend-domain.onrender.com`
+4. Save the configuration
+
+### Post-Deployment Configuration
+
+After your services are deployed, you'll need to update the CORS configuration:
+
+1. **Get your frontend URL** from the Render dashboard
+2. **Update CORS origins** in `backend/app/main.py`:
+   ```python
+   allow_origins=[
+       "http://localhost:5173",  # Local development
+       "https://your-actual-frontend-url.onrender.com",  # Your production URL
+   ],
+   ```
+3. **Commit and push** the change to trigger a backend redeployment
+
+### Production Security Notes
+
+- All cookies are automatically secured with `httpOnly`, `secure`, and `samesite=strict`
+- Database connections use SSL in production
+- Sensitive data is automatically redacted from logs
+- Rate limiting is enabled on authentication endpoints
+- CORS is configured for your specific frontend domain
 
 You're live! 🎉
 
@@ -172,6 +260,88 @@ You're live! 🎉
 - **Authentication**: Google OAuth 2.0 with secure session storage
 - **Deployment**: Render.com with internal service communication
 - **Database**: PostgreSQL (managed by Render)
+
+## 📋 Environment Variables Reference
+
+### Backend Variables (`backend/.env`)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GOOGLE_CLIENT_ID` | ✅ | - | Google OAuth 2.0 Client ID from Google Cloud Console |
+| `DATABASE_URL` | ✅ | - | PostgreSQL connection string (auto-configured on Render) |
+| `SESSION_SECRET` | ✅ | - | Cryptographically secure secret for session signing |
+| `ENVIRONMENT` | ❌ | `production` | Environment mode: `development`, `production`, `test` |
+| `LOG_LEVEL` | ❌ | `INFO` | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+
+### Frontend Variables (`frontend/.env.local`)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_GOOGLE_CLIENT_ID` | ✅ | - | Same Google OAuth Client ID as backend |
+| `VITE_API_BASE_URL` | ✅ | - | Backend API URL (auto-configured on Render) |
+
+### Environment-Specific Behavior
+
+#### Development (`ENVIRONMENT=development`)
+- Detailed logging with database query echo
+- CORS allows `http://localhost:5173`
+- Cookies work over HTTP (not secure)
+- Debug information in logs
+
+#### Production (`ENVIRONMENT=production`)
+- Structured JSON logging with PII redaction
+- Secure cookies (HTTPS only, httpOnly, samesite=strict)
+- Rate limiting enabled
+- Security headers enforced
+- Database SSL connections
+
+## 🔧 Troubleshooting
+
+### Common Environment Configuration Issues
+
+#### Backend Issues
+
+**"DATABASE_URL not configured"**
+- Ensure `DATABASE_URL` is set in `backend/.env`
+- For local development: `postgresql://postgres:postgres@localhost:5432/mydb`
+- Check PostgreSQL is running: `docker ps` or `docker start pg-local`
+
+**"SESSION_SECRET not configured"**
+- Generate a secure secret: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- Add to `backend/.env`: `SESSION_SECRET=your_generated_secret`
+
+**"GOOGLE_CLIENT_ID not configured"**
+- Create OAuth credentials at https://console.cloud.google.com/apis/credentials
+- Add the Client ID to `backend/.env`: `GOOGLE_CLIENT_ID=your_client_id`
+
+#### Frontend Issues
+
+**"Google Sign-In not working"**
+- Verify `VITE_GOOGLE_CLIENT_ID` matches the backend `GOOGLE_CLIENT_ID`
+- Check Google OAuth origins include your frontend URL
+- For local development: add `http://localhost:5173` to authorized origins
+
+**"API calls failing"**
+- Verify `VITE_API_BASE_URL` points to your backend
+- Local development: `http://localhost:8000`
+- Production: your Render backend URL
+
+**"CORS errors in production"**
+- Update `backend/app/main.py` CORS configuration with your frontend URL
+- Replace `https://react-frontend-t2b1.onrender.com` with your actual Render frontend URL
+- Redeploy the backend after making this change
+
+#### Production Deployment Issues
+
+**"Environment variables not found on Render"**
+- Set variables in Render dashboard, not in `.env` files
+- Backend variables go in the backend service settings
+- Frontend variables go in the frontend service settings
+
+**"Google OAuth not working in production"**
+- Add your production frontend URL to Google OAuth authorized origins
+- Ensure `VITE_GOOGLE_CLIENT_ID` is set in Render frontend service
+- Check that `GOOGLE_CLIENT_ID` matches between frontend and backend
 
 ## 📚 Documentation
 
