@@ -51,3 +51,16 @@
   - Add tests for edge cases in redaction patterns (malformed URLs, special characters)
   - Add tests for production configuration validation and error handling
   - _Requirements: 4.1, 4.3, 4.4_
+
+- [ ] 8. Fix test import issues and ensure all tests pass
+  - Fix import paths in session security tests (backend.app should be app)
+  - Ensure all secure logging tests pass without errors
+  - Verify test coverage meets requirements
+  - _Requirements: 4.1, 4.3, 4.4_
+
+- [ ] 9. Update project documentation to reflect secure logging changes
+  - Update README.md with secure logging feature information
+  - Update vulnerabilities.md to document the resolution of information disclosure vulnerability
+  - Document new environment variables and configuration options
+  - Update security documentation with secure logging best practices
+  - _Requirements: 3.1, 3.4, 4.4_
