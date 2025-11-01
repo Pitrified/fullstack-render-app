@@ -80,9 +80,9 @@ LOG_LEVEL=INFO
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-#### Frontend Environment Variables (`frontend/.env.local`)
+#### Frontend Environment Variables (`frontend/.env`)
 
-Copy `frontend/.env.example` to `frontend/.env.local` and configure:
+Copy `frontend/.env.example` to `frontend/.env` and configure:
 
 ```bash
 # Required
@@ -103,7 +103,7 @@ VITE_API_BASE_URL=http://localhost:8000
      - `https://your-frontend-domain.com` (for production)
 3. Copy the Client ID to both:
    - `backend/.env`: `GOOGLE_CLIENT_ID=your_client_id`
-   - `frontend/.env.local`: `VITE_GOOGLE_CLIENT_ID=your_client_id`
+   - `frontend/.env`: `VITE_GOOGLE_CLIENT_ID=your_client_id`
 
 ### 5. Backend Setup
 
@@ -121,7 +121,7 @@ uvicorn app.main:app --reload
 ```bash
 cd frontend
 npm install
-# Ensure .env.local is configured (see step 3)
+# Ensure .env is configured (see step 3)
 npm run dev
 ```
 
@@ -162,7 +162,7 @@ npm run dev
 
 This app is configured for communication between frontend and backend:
 
-- **Local Development**: Frontend uses `http://localhost:8000` (via `VITE_API_BASE_URL` in `.env.local`)
+- **Local Development**: Frontend uses `http://localhost:8000` (via `VITE_API_BASE_URL` in `.env`)
 - **Render Deployment**: Frontend uses `https://fastapi-backend-yf8l.onrender.com` (configured in `render.yaml`)
 
 
@@ -273,7 +273,7 @@ You're live! 🎉
 | `ENVIRONMENT` | ❌ | `production` | Environment mode: `development`, `production`, `test` |
 | `LOG_LEVEL` | ❌ | `INFO` | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 
-### Frontend Variables (`frontend/.env.local`)
+### Frontend Variables (`frontend/.env`)
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|

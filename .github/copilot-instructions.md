@@ -36,7 +36,7 @@ This is a **fullstack Google OAuth application** with clear service boundaries:
 - Tables auto-created on startup via `Base.metadata.create_all`
 
 ### Environment Configuration
-- **Local dev**: Use `.env.local` files (frontend) and `.env` files (backend)
+- **Local dev**: Use `.env` files for both frontend and backend
 - **Render deployment**: Environment variables configured in `render.yaml` and Render dashboard
 - **API communication**: 
   - Local: `VITE_API_BASE_URL=http://localhost:8000`
