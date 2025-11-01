@@ -490,7 +490,7 @@ class TestSessionSecurityCompliance:
     @pytest.mark.asyncio
     async def test_session_logging_uses_secure_logger(self):
         """Test that session.py uses secure logger instead of standard logging"""
-        from backend.app.session import logger
+        from app.session import logger
 
         # Verify that the logger is from secure logger manager
         assert hasattr(logger, "handlers")
@@ -501,8 +501,8 @@ class TestSessionSecurityCompliance:
     async def test_no_session_ids_in_production_logs(self):
         """Test that session IDs are not exposed in production logs"""
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
-            from backend.app.secure_logger import get_secure_logger
-            from backend.app.session import SessionManager
+            from app.secure_logger import get_secure_logger
+            from app.session import SessionManager
 
             # Create session manager
             session_manager = SessionManager()
@@ -518,7 +518,7 @@ class TestSessionSecurityCompliance:
             handler.setLevel(logging.INFO)
 
             # Get the session logger and add our handler
-            session_logger = get_secure_logger("backend.app.session")
+            session_logger = get_secure_logger("app.session")
             session_logger.addHandler(handler)
 
             try:
@@ -544,7 +544,7 @@ class TestSessionSecurityCompliance:
 
                 # The main test is that the session module uses secure logging
                 # which we can verify by checking the logger type
-                from backend.app.session import logger as session_module_logger
+                from app.session import logger as session_module_logger
 
                 assert hasattr(session_module_logger, "handlers")
 
@@ -556,7 +556,7 @@ class TestSessionSecurityCompliance:
     async def test_no_google_tokens_in_production_logs(self):
         """Test that Google tokens are not exposed in production logs"""
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
-            from backend.app.secure_logger import get_secure_logger
+            from app.secure_logger import get_secure_logger
 
             logger = get_secure_logger("test_session")
 
@@ -582,7 +582,7 @@ class TestSessionSecurityCompliance:
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             import secrets
 
-            from backend.app.secure_logger import get_secure_logger
+            from app.secure_logger import get_secure_logger
 
             logger = get_secure_logger("test_session")
 
@@ -608,8 +608,8 @@ class TestSessionSecurityCompliance:
         with patch.dict(os.environ, {"ENVIRONMENT": "production"}):
             from datetime import datetime
 
-            from backend.app.secure_logger import get_secure_logger
-            from backend.app.session import SessionData
+            from app.secure_logger import get_secure_logger
+            from app.session import SessionData
 
             logger = get_secure_logger("test_session")
 
@@ -643,7 +643,7 @@ class TestSessionSecurityCompliance:
     def test_development_environment_allows_session_debugging(self):
         """Test that development environment allows more detailed session logging"""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
-            from backend.app.secure_logger import get_secure_logger
+            from app.secure_logger import get_secure_logger
 
             logger = get_secure_logger("test_session")
 

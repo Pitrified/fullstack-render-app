@@ -1,10 +1,14 @@
 .env
+
 __pycache__/
 backend/.env
 backend/__pycache__/
 backend/venv/
-build/
+backend/.coverage
+
+
 frontend/.env
 frontend/.env.local
 frontend/dist/
+build/
 node_modules/
