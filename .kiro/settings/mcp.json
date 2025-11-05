@@ -1,14 +1,13 @@
 {
   "mcpServers": {
     "render": {
-      "command": "uvx",
+      "command": "npx",
       "args": [
-        "mcp-server-fetch",
-        "https://mcp.render.com"
+        "mcp-remote",
+        "https://mcp.render.com/mcp",
+        "--header",
+        "Authorization: Bearer ${RENDER_API_KEY}"
       ],
-      "env": {
-        "RENDER_API_KEY": "${RENDER_API_KEY}"
-      },
       "disabled": false,
       "autoApprove": []
     }
